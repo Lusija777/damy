@@ -1,0 +1,15 @@
+1. fe3 ef6
+2. f4 e5
+3. fxd6 fe7
+4. dxf8=Q d6
+5. Qxh6 g7
+6. Qxf8=Q b6
+7. Qxc5 e7
+8. Qxa7 c7
+9. Qb8=Q f6
+10. Qxe5 fxd4
+11. a3 c3
+12. e3 d2
+13. ef2 e1=Q
+
+0 - 1
