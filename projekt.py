@@ -2,11 +2,9 @@ import tkinter
 from PIL import Image, ImageTk
 import itertools
 from player import Player
-from game import Game
-from board import Board
-from ui import UI
 
 class Program:
+
     def __init__(self):
         players_file = open("players.txt", "a")
         players_file.close()
@@ -49,6 +47,7 @@ class Program:
         Program.board(self)
         tkinter.mainloop()
 
+
     def load_images(self):
         w_pawn = Image.open('white-pawn.png').resize((self.square_size, self.square_size))
         b_pawn = Image.open('black-pawn.png').resize((self.square_size, self.square_size))
@@ -65,11 +64,13 @@ class Program:
 
         return b_queen, w_queen
 
+
     def create_win_animation(self, b_queen, w_queen):
         self.b_queen_anim = [ImageTk.PhotoImage(b_queen.rotate(15)), self.b_queen,
                              ImageTk.PhotoImage(b_queen.rotate(-15)), self.b_queen]
         self.w_queen_anim = [ImageTk.PhotoImage(w_queen.rotate(15)), self.w_queen,
                              ImageTk.PhotoImage(w_queen.rotate(-15)), self.w_queen]
+
 
     def board(self):
         game_size = 360
@@ -102,6 +103,7 @@ class Program:
 
         self.end_queens_animation()
 
+
     def paint_players_rating(self):
         rating1 = str(self.player1.rating[0])
         rating2 = str(self.player2.rating[0])
@@ -112,38 +114,52 @@ class Program:
         self.canvas.create_text(self.square_size / 2 + 2 * self.spacer, self.spacer,
                                 text=f"{self.player2.name} {rating2}", anchor="nw", font='arial 24', fill="white")
 
+
     def paint_last_move(self):
-        if len(self.moves) > 0:
-            last_move = self.moves[-1]
-            self.canvas.create_rectangle(self.spacer + self.square_size * last_move[1][0],
-                                         2 * self.spacer + self.square_size / 2 + self.square_size * last_move[1][1],
-                                         self.spacer + self.square_size * last_move[1][0] + self.square_size,
-                                         2 * self.spacer + self.square_size / 2 + self.square_size * last_move[1][
-                                             1] + self.square_size, fill="#8a714b", outline="")
-            self.canvas.create_rectangle(self.spacer + self.square_size * last_move[2][0],
-                                         2 * self.spacer + self.square_size / 2 + self.square_size * last_move[2][1],
-                                         self.spacer + self.square_size * last_move[2][0] + self.square_size,
-                                         2 * self.spacer + self.square_size / 2 + self.square_size * last_move[2][
-                                             1] + self.square_size, fill="#8a714b", outline="")
+        """Highlights the last move made on the board."""
+        if not self.moves:
+            return
+
+        from_square = self.moves[-1][1]
+        to_square = self.moves[-1][2]
+
+        self._highlight_square(from_square, fill="#8a714b")
+        self._highlight_square(to_square, fill="#8a714b")
+
 
     def paint_next_move(self):
-        if self.current_move["piece"] is not None:
-            self.canvas.create_rectangle(self.spacer + self.square_size * self.current_move["piece"]["x"],
-                                         2 * self.spacer + self.square_size * self.current_move["piece"][
-                                             "y"] + self.square_size / 2,
-                                         self.spacer + self.square_size * self.current_move["piece"][
-                                             "x"] + self.square_size,
-                                         2 * self.spacer + self.square_size * self.current_move["piece"][
-                                             "y"] + self.square_size + self.square_size / 2, fill="YellowGreen",
-                                         outline="")
-            for available_move in self.current_move["piece"]["moves"]:
-                self.canvas.create_oval(
-                    self.spacer + self.square_size * available_move[0][0] + 1 / 3 * self.square_size,
-                    2 * self.spacer + self.square_size / 2 + self.square_size * available_move[0][
-                        1] + 1 / 3 * self.square_size,
-                    self.spacer + self.square_size * available_move[0][0] + self.square_size - 1 / 3 * self.square_size,
-                    2 * self.spacer + self.square_size / 2 + self.square_size * available_move[0][
-                        1] + self.square_size - 1 / 3 * self.square_size, fill="YellowGreen", outline="YellowGreen")
+        """Highlights the piece and its possible next moves."""
+        if self.current_move["piece"] is None:
+            return
+
+        # Paint the current piece
+        piece = self.current_move["piece"]
+        self._highlight_square((piece["x"], piece["y"]), fill="YellowGreen")
+
+        # Paint available moves
+        for move in piece["moves"]:
+            self._highlight_move(move[0][0], move[0][1])
+
+
+    def _highlight_move(self, x, y):
+        """Highlights a potential move square with an oval shape."""
+        x1 = self.spacer + self.square_size * x + 1 / 3 * self.square_size
+        y1 = 2 * self.spacer + self.square_size / 2 + self.square_size * y + 1 / 3 * self.square_size
+        x2 = x1 + self.square_size - 2 / 3 * self.square_size
+        y2 = y1 + self.square_size - 2 / 3 * self.square_size
+        self.canvas.create_oval(x1, y1, x2, y2, fill="YellowGreen", outline="YellowGreen")
+
+
+    def _highlight_square(self, position, fill):
+        """Highlights a board square at a given logical position (x, y)."""
+        x, y = position
+        x1 = self.spacer + self.square_size * x
+        y1 = 2 * self.spacer + self.square_size / 2 + self.square_size * y
+        x2 = x1 + self.square_size
+        y2 = y1 + self.square_size
+
+        self.canvas.create_rectangle(x1, y1, x2, y2, fill=fill, outline="")
+
 
     def paint_squares(self):
         farba1, farba2 = "khaki", "saddlebrown"
@@ -157,6 +173,7 @@ class Program:
                                              fill=f1, outline="")
                 f1, f2 = f2, f1
             farba1, farba2 = farba2, farba1
+
 
     def end_queens_animation(self):
         if self.game_result == 1:
@@ -181,43 +198,66 @@ class Program:
                 self.canvas.after(300)
 
     def paint_time(self, i, player):
-        seconds = str(player.time % 600)
-        if len(seconds) == 2:
-            seconds = "0" + seconds
-        elif len(seconds) == 1:
-            seconds = "00" + seconds
-        seconds = seconds[:2]
-        minutes = str(player.time // 600)
-        if len(minutes) == 1:
-            minutes = "0" + minutes
-        self.canvas.create_rectangle(player.timer[0], player.timer[1], player.timer[0] + 1.5 * self.square_size,
-                                     player.timer[1] + 0.5 * self.square_size, fill="#333333")
-        self.canvas.create_text(player.timer[0] + 1.5 * self.spacer - 2, player.timer[1], text=(f"{minutes}:{seconds}"),
-                                fill="white", tag=f"timer{i}", anchor="nw", font='arial 24')
+        """Draws the timer rectangle and formatted time text for the player."""
+        minutes, seconds = self._format_time(player.time)
+
+        self.canvas.create_rectangle(
+            player.timer[0], player.timer[1],
+            player.timer[0] + 1.5 * self.square_size,
+            player.timer[1] + 0.5 * self.square_size,
+            fill="#333333"
+        )
+
+        self.canvas.delete(f"timer{i}")
+        self.canvas.create_text(
+            player.timer[0] + 1.5 * self.spacer - 2, player.timer[1],
+            text=f"{minutes}:{seconds}", fill="white", tags=f"timer{i}", anchor="nw", font='arial 24'
+        )
+
+    def _format_time(self, time_units):
+        """Formats internal time (in tenths of a second) into (MM, SS) strings."""
+        total_seconds = time_units // 10
+        minutes = total_seconds // 60
+        seconds = total_seconds % 60
+        return f"{minutes:02}", f"{seconds:02}"
 
     def paint_resign_and_flag_button(self, player):
+        """Draws the resign and draw (flag/half-flag) buttons for the player."""
         for name, button in player.buttons.items():
-            self.canvas.create_rectangle(button[0][0], button[0][1], button[1][0], button[1][1], fill=button[2])
-            if name == "resign":
-                self.canvas.create_image((button[0][0] + button[1][0]) / 2, (button[0][1] + button[1][1]) / 2,
-                                         image=self.flag)
-            else:
-                self.canvas.create_image((button[0][0] + button[1][0]) / 2, (button[0][1] + button[1][1]) / 2,
-                                         image=self.half)
+            x1, y1 = button[0]
+            x2, y2 = button[1]
+            fill_color = button[2]
+            image = self.flag if name == "resign" else self.half
 
-    def reupdate_rating_string_after_end_game(self, rating1, rating2):
-        if self.game_result is not None:
-            new_rating1 = self.player1.rating[1] - self.player1.rating[0]
-            new_rating2 = self.player2.rating[1] - self.player2.rating[0]
-            if new_rating1 < 0:
-                rating1 += " " + str(new_rating1)
-            else:
-                rating1 += " +" + str(new_rating1)
-            if new_rating2 < 0:
-                rating2 += " " + str(new_rating2)
-            else:
-                rating2 += " +" + str(new_rating2)
-        return rating1, rating2
+            self.canvas.create_rectangle(x1, y1, x2, y2, fill=fill_color)
+            self._draw_centered_image((x1, y1, x2, y2), image)
+
+    def _draw_centered_image(self, rect, image):
+        """Draws an image centered within the given rectangle."""
+        x1, y1, x2, y2 = rect
+        center_x = (x1 + x2) / 2
+        center_y = (y1 + y2) / 2
+        self.canvas.create_image(center_x, center_y, image=image)
+
+
+    def reupdate_rating_string_after_end_game(self, rating1_str, rating2_str):
+        """Appends rating change (e.g., +30 or -15) to each player's rating string after game ends."""
+        if self.game_result is None:
+            return rating1_str, rating2_str
+
+        rating1_change = self._format_rating_change(self.player1)
+        rating2_change = self._format_rating_change(self.player2)
+
+        return f"{rating1_str} {rating1_change}", f"{rating2_str} {rating2_change}"
+
+    def _format_rating_change(self, player):
+        """Returns a string representing the rating change, like '+25' or '-13'."""
+        if player.rating[1] is None:
+            return ""  # Fallback in case rating wasn't updated properly
+
+        change = player.rating[1] - player.rating[0]
+        sign = "+" if change >= 0 else ""
+        return f"{sign}{change}"
 
     def paint_info_for_on_move_player(self):
         self.canvas.delete("on_move")
@@ -258,54 +298,31 @@ class Program:
                                 text=notation, font="arial 10")
 
     def paint_marking_on_chess_board(self):
-        self.canvas.create_text(self.spacer + self.square_size * 8 - 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 0, text=f"8", anchor="ne",
-                                fill="khaki")
-        self.canvas.create_text(self.spacer + self.square_size * 8 - 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 1, text=f"7", anchor="ne",
-                                fill="saddlebrown")
-        self.canvas.create_text(self.spacer + self.square_size * 8 - 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 2, text=f"6", anchor="ne",
-                                fill="khaki")
-        self.canvas.create_text(self.spacer + self.square_size * 8 - 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 3, text=f"5", anchor="ne",
-                                fill="saddlebrown")
-        self.canvas.create_text(self.spacer + self.square_size * 8 - 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 4, text=f"4", anchor="ne",
-                                fill="khaki")
-        self.canvas.create_text(self.spacer + self.square_size * 8 - 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 5, text=f"3", anchor="ne",
-                                fill="saddlebrown")
-        self.canvas.create_text(self.spacer + self.square_size * 8 - 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 6, text=f"2", anchor="ne",
-                                fill="khaki")
-        self.canvas.create_text(self.spacer + self.square_size * 8 - 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 7, text=f"1", anchor="ne",
-                                fill="saddlebrown")
-        self.canvas.create_text(self.spacer + self.square_size * 7 + 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 8, text=f"h", anchor="sw",
-                                fill="saddlebrown")
-        self.canvas.create_text(self.spacer + self.square_size * 6 + 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 8, text=f"g", anchor="sw",
-                                fill="khaki")
-        self.canvas.create_text(self.spacer + self.square_size * 5 + 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 8, text=f"f", anchor="sw",
-                                fill="saddlebrown")
-        self.canvas.create_text(self.spacer + self.square_size * 4 + 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 8, text=f"e", anchor="sw",
-                                fill="khaki")
-        self.canvas.create_text(self.spacer + self.square_size * 3 + 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 8, text=f"d", anchor="sw",
-                                fill="saddlebrown")
-        self.canvas.create_text(self.spacer + self.square_size * 2 + 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 8, text=f"c", anchor="sw",
-                                fill="khaki")
-        self.canvas.create_text(self.spacer + self.square_size * 1 + 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 8, text=f"b", anchor="sw",
-                                fill="saddlebrown")
-        self.canvas.create_text(self.spacer + self.square_size * 0 + 5,
-                                2 * self.spacer + self.square_size / 2 + self.square_size * 8, text=f"a", anchor="sw",
-                                fill="khaki")
+        """Draws row and column markings on the chessboard."""
+        # Colors for alternating row markings
+        row_colors = ["khaki", "saddlebrown"]
+
+        # Draw row numbers (8 to 1)
+        for i in range(8):
+            row_number = 8 - i
+            self.canvas.create_text(
+                self.spacer + self.square_size * 8 - 5,
+                2 * self.spacer + self.square_size / 2 + self.square_size * i,
+                text=str(row_number),
+                anchor="ne",
+                fill=row_colors[i % 2]
+            )
+
+        # Draw column letters (a to h)
+        col_letters = ["h", "g", "f", "e", "d", "c", "b", "a"]
+        for i in range(8):
+            self.canvas.create_text(
+                self.spacer + self.square_size * (7 - i) + 5,
+                2 * self.spacer + self.square_size / 2 + self.square_size * 8,
+                text=col_letters[i],
+                anchor="sw",
+                fill=row_colors[i % 2]
+            )
 
     def generate_pieces_on_canvas(self):
         for piece in self.player1.pieces:
@@ -353,34 +370,28 @@ class Program:
         return notation
 
     def timer(self):
+        """Updates the timer for the current player and checks for timeout."""
         if not self.do_tick:
             return
 
-        if self.on_move == self.player1:
-            i = 0
+        current_player = self.on_move
+        player_index = 0 if current_player == self.player1 else 1
+
+        self.paint_time(player_index, current_player)
+
+        if current_player.time == 0:
+            self.handle_game_timeout(current_player)
         else:
-            i = 1
-            
-        seconds = str(self.on_move.time%600)
-        if len(seconds) == 2:
-            seconds = "0" + seconds
-        elif len(seconds) == 1:
-            seconds = "00" + seconds
-        seconds = seconds[:2]
-        minutes = str(self.on_move.time//600)
-        if len(minutes) == 1:
-            minutes = "0" + minutes
-        self.canvas.delete(f"timer{i}")
-        self.canvas.create_text(self.on_move.timer[0]+ 1.5*self.spacer - 2, self.on_move.timer[1], text=(f"{minutes}:{seconds}"), fill = "white", tag = f"timer{i}", anchor="nw", font='arial 24')
-        
-        if self.on_move.time == 0:
-            if self.on_move == self.player1:
-                Program.set_game_result(self, -1)
-            else:
-                Program.set_game_result(self, 1)
-        else:
-            self.on_move.time -= 1
+            current_player.time -= 1
             self.canvas.after(100, self.timer)
+
+    def handle_game_timeout(self, player):
+        """Handles the timeout logic and sets the game result."""
+        if player == self.player1:
+            Program.set_game_result(self, -1)
+        else:
+            Program.set_game_result(self, 1)
+
 
     def find_square(self, x, y):
         x = (x - self.spacer) // self.square_size
@@ -396,76 +407,121 @@ class Program:
     def release(self, event):
         if self.moving:
             self.moving = False
-            Program.click(self, event)      
-                    
-    def click(self, event):
-        # any player can offer/accept/decline draw or resign, so check if any of these buttons were clicked
-        button_clicked = False
-        for player in [self.player1, self.player2]:
-            if button_clicked:
-                break
-            for name, coordinates in player.buttons.items():
-                if button_clicked:
-                    break
-                if event.x >= coordinates[0][0] and event.y >= coordinates[0][1] and event.x <= coordinates[1][0] and event.y <=  coordinates[1][1]:
-                    button_clicked = True
-                    if name == "draw":
-                        if player.offering_draw:
-                            # made an offer and interrupted her
-                            player.offering_draw = False                      
-                            self.player2.buttons["draw"][2] = "grey"
-                            self.player1.buttons["draw"][2] = "grey"
-                            Program.board(self)
-                        else:
-                            if (player == self.player1 and self.player2.offering_draw) or (player == self.player2 and self.player1.offering_draw):
-                                # end of game, accepted draw
-                                Program.set_game_result(self, 0)
-                            else:
-                                # making an offer to draw
-                                player.offering_draw = True
-                                coordinates[2] = "maroon"
-                                if player == self.player1:
-                                    self.player2.buttons["draw"][2] = "navy"
-                                else:
-                                    self.player1.buttons["draw"][2] = "navy"
-                                Program.board(self)
-                    else:
-                        # I resigned, end of game, my loss
-                        if player == self.player1:
-                            Program.set_game_result(self, -1)
-                        else:
-                            Program.set_game_result(self, 1)
+            self.click(event)
 
-        if button_clicked:
-            self.current_move = {"piece": None, "to": None}
-            Program.board(self)
+
+    def click(self, event):
+        """Handles click events for offering/accepting draws and making moves."""
+        # Check if a button was clicked (draw or resign)
+        if self.handle_button_click(event):
             return None
-        
+
+        # Find the square clicked on the board
         square = Program.find_square(self, event.x, event.y)
         if square is None:
-            self.current_move = {"piece": None, "to": None}
-            Program.board(self)
+            self.reset_current_move()
             return None
-        
-        if self.current_move["piece"] is None:
-            for piece in self.on_move.pieces:
-                if [piece["x"], piece["y"]] == square:
-                    self.current_move["piece"] = piece
-                    Program.board(self)
-                    break
-            return None   
 
+        # Handle the piece selection or movement
+        if self.current_move["piece"] is None:
+            self.select_piece(square)
+            return None
+
+        # Handle the movement of the selected piece
+        self.move_piece(square)
+
+
+    def handle_button_click(self, event):
+        """Handles clicking on any of the buttons (draw, resign, etc.)."""
+        for player in [self.player1, self.player2]:
+            for name, coordinates in player.buttons.items():
+                if self.is_within_bounds(event, coordinates):
+                    self.reset_current_move()
+                    if name == "draw":
+                        self.handle_draw_offer(player)
+                    else:
+                        self.handle_resignation(player)
+                    return True
+        return False
+
+
+    def is_within_bounds(self, event, coordinates):
+        """Checks if the click event is within the bounds of a button."""
+        return (event.x >= coordinates[0][0] and event.y >= coordinates[0][1] and
+                event.x <= coordinates[1][0] and event.y <= coordinates[1][1])
+
+    def handle_draw_offer(self, player):
+        """Handles the logic for offering or accepting a draw."""
+        if player.offering_draw:
+            player.offering_draw = False
+            self.reset_draw_buttons()
+            Program.board(self)
+        else:
+            self.offer_or_accept_draw(player)
+
+
+    def offer_or_accept_draw(self, player):
+        """Offers or accepts a draw based on the current game state."""
+        if ((player == self.player1 and self.player2.offering_draw) or
+                (player == self.player2 and self.player1.offering_draw)):
+            Program.set_game_result(self, 0)  # Draw accepted
+        else:
+            player.offering_draw = True
+            self.update_draw_buttons(player)
+            Program.board(self)
+
+
+    def reset_draw_buttons(self):
+        """Resets the draw buttons to their default state."""
+        self.player2.buttons["draw"][2] = "grey"
+        self.player1.buttons["draw"][2] = "grey"
+
+    def update_draw_buttons(self, player):
+        """Updates the draw buttons when a player offers a draw."""
+        coordinates = player.buttons["draw"]
+        coordinates[2] = "maroon"
+        if player == self.player1:
+            self.player2.buttons["draw"][2] = "navy"
+        else:
+            self.player1.buttons["draw"][2] = "navy"
+
+
+    def handle_resignation(self, player):
+        """Handles the logic for a player resigning."""
+        result = -1 if player == self.player1 else 1
+        Program.set_game_result(self, result)
+
+
+    def reset_current_move(self):
+        """Resets the current move data."""
+        self.current_move = {"piece": None, "to": None}
+        Program.board(self)
+
+
+    def select_piece(self, square):
+        """Selects a piece for the current move."""
+        for piece in self.on_move.pieces:
+            if [piece["x"], piece["y"]] == square:
+                self.current_move["piece"] = piece
+                Program.board(self)
+
+
+    def move_piece(self, square):
+        """Handles the movement of a selected piece."""
         for moves in self.current_move["piece"]["moves"]:
             if square == moves[0]:
                 self.current_move["to"] = moves
                 break
-            
+
         if self.current_move["to"] is None:
-            self.current_move = {"piece": None, "to": None}
-            Program.board(self)
+            self.reset_current_move()
             return None
 
-        #making a move, calculating new available moves for each piece
+        self.ready_to_move()
+
+
+    def ready_to_move(self):
+        """Makes the move and updates the game state."""
         Program.make_move(self, [
             self.current_move["piece"]["type"],
             [self.current_move["piece"]["x"], self.current_move["piece"]["y"]],
@@ -473,101 +529,124 @@ class Program:
             self.current_move["to"][1] != [None, None],
             self.current_move["to"][0][1] == 7 or self.current_move["to"][0][1] == 0
         ])
-        # any move automatically decline offer on a draw
+
+        # Decline draw offer after a move
         self.player2.offering_draw = False
         self.player1.offering_draw = False
-        self.player2.buttons["draw"][2] = "grey"
-        self.player1.buttons["draw"][2] = "grey"
-        
-        if self.on_move == self.player1:
-            opposite_player = self.player2
-        else:
-            opposite_player = self.player1
-            
-        if len(opposite_player.pieces) == 0:
-            if opposite_player == self.player1:
-                Program.set_game_result(self, -1)
-            else:
-                Program.set_game_result(self, 1)    
-            return None
-            
-        has_available_move = False
-        for piece in opposite_player.pieces:
-            if len(piece["moves"]) > 0:
-                has_available_move = True
-                break
-        if not has_available_move:
-            if opposite_player == self.player1:
-                Program.set_game_result(self, -1)
-            else:
-                Program.set_game_result(self, 1)
-            return None
+        self.reset_draw_buttons()
 
-        # no capture, no promotion
+        # Check for game end conditions (no pieces or no available moves)
+        self.check_game_end()
+
+        # Switch to the other player's turn
+        self.on_move = self.player2 if self.on_move == self.player1 else self.player1
+        self.reset_current_move()
+        Program.board(self)
+
+    def check_game_end(self):
+        """Checks if the game has ended due to no available moves or pieces."""
+        opposite_player = self.player2 if self.on_move == self.player1 else self.player1
+
+        if len(opposite_player.pieces) == 0:
+            result = -1 if opposite_player == self.player1 else 1
+            Program.set_game_result(self, result)
+            return
+
+        has_available_move = any(len(piece["moves"]) > 0 for piece in opposite_player.pieces)
+        if not has_available_move:
+            result = -1 if opposite_player == self.player1 else 1
+            Program.set_game_result(self, result)
+            return
+
+        self.check_insignificant_moves()
+
+    def check_insignificant_moves(self):
+        """Checks for 80 moves with no captures or promotions (stalemate)."""
         number_of_insignificant_moves = 0
         for move in self.moves[::-1]:
             if not move[3] and not move[4]:
                 number_of_insignificant_moves += 1
             else:
                 break
+
         if number_of_insignificant_moves >= 80:
             Program.set_game_result(self, 0)
-            return None
-        
-        self.on_move = opposite_player
-        self.current_move = {"piece": None, "to": None}
-        Program.board(self)
-        
+
 
     def make_move(self, move):
-        i = len(self.moves)      
-        alphabet = {0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h"} 
-        notation = ""
-        
-        if move[0] == "q":
-            notation += "Q"
-        if (i%2) == 0:
-            pieces = self.player1.pieces
-        else:
-            pieces = self.player2.pieces
-        move_possible_by_another = False    
-        for piece in pieces:
-            if not move_possible_by_another and piece["type"] == move[0] and [piece["x"], piece["y"]] != move[1]:
-                for available_move in piece["moves"]:
-                    if move[2] == available_move[0]:
-                        move_possible_by_another = True
-                        break
-        if move_possible_by_another or (move[3] and "p" == move[0]):
-            notation += alphabet[move[1][0]]
-        if move[3]:
-            notation += "x"
-        notation += alphabet[move[2][0]] + str(8 - move[2][1])
-        if move[4]:
-            notation += "=Q"
-            
+        """Executes a move, updates game state, and appends notation."""
+        notation = self._generate_notation(move)
         move.append(notation)
         self.moves.append(move)
 
-        if self.on_move == self.player1:
-            opponent_pieces = self.player2.pieces
-        else:
-            opponent_pieces = self.player1.pieces
-                              
-        if self.current_move["to"][1] is not [None, None]:
-            #throwing piece out of the game
-            for j in range(len(opponent_pieces)):
-                if [opponent_pieces[j]["x"], opponent_pieces[j]["y"]] == self.current_move["to"][1]:
-                    opponent_pieces.pop(j)
-                    break
-    
-        #change of coordinates, the type of figure that made the move        
-        self.current_move["piece"]["x"] = self.current_move["to"][0][0]
-        self.current_move["piece"]["y"] = self.current_move["to"][0][1]
-        if self.current_move["to"][0][1] == 7 or self.current_move["to"][0][1] == 0:
+        self._capture_piece_if_needed()
+        self._update_piece_position()
+        self._handle_promotion()
+        self._refresh_available_moves()
+
+
+    def _generate_notation(self, move):
+        """Creates algebraic notation for a move."""
+        i = len(self.moves)
+        alphabet = {i: chr(97 + i) for i in range(8)}  # {0: 'a', ..., 7: 'h'}
+        notation = "Q" if move[0] == "q" else ""
+
+        pieces = self.player1.pieces if (i % 2) == 0 else self.player2.pieces
+        move_possible_by_another = self._is_ambiguous_move(pieces, move)
+
+        if move_possible_by_another or (move[3] and move[0] == "p"):
+            notation += alphabet[move[1][0]]
+
+        if move[3]:
+            notation += "x"
+
+        notation += alphabet[move[2][0]] + str(8 - move[2][1])
+
+        if move[4]:
+            notation += "=Q"
+
+        return notation
+
+
+    def _is_ambiguous_move(self, pieces, move):
+        """Checks if another piece of the same type can also perform the move."""
+        for piece in pieces:
+            if piece["type"] == move[0] and [piece["x"], piece["y"]] != move[1]:
+                if any(move[2] == available_move[0] for available_move in piece["moves"]):
+                    return True
+        return False
+
+
+    def _capture_piece_if_needed(self):
+        """Removes the opponent's piece if it was captured."""
+        opponent = self.player2 if self.on_move == self.player1 else self.player1
+        captured_pos = self.current_move["to"][1]
+
+        if captured_pos != [None, None]:
+            opponent.pieces = [
+                p for p in opponent.pieces if [p["x"], p["y"]] != captured_pos
+            ]
+
+
+    def _update_piece_position(self):
+        """Updates the position of the moving piece."""
+        to_square = self.current_move["to"][0]
+        self.current_move["piece"]["x"] = to_square[0]
+        self.current_move["piece"]["y"] = to_square[1]
+
+
+    def _handle_promotion(self):
+        """Promotes a pawn to a queen if it reaches the back rank."""
+        y = self.current_move["to"][0][1]
+        if y in (0, 7):
             self.current_move["piece"]["type"] = "q"
-            
-        Player.find_moves(self.player2, self.player1.pieces)
+
+
+    def _refresh_available_moves(self):
+        """Recalculates legal moves for both players."""
         Player.find_moves(self.player1, self.player2.pieces)
+        Player.find_moves(self.player2, self.player1.pieces)
+
 
     def find_best_players(self):
         all_players = {}
@@ -585,7 +664,8 @@ class Program:
         for name,rating in all_players.items():
             self.best_players += (f"{i}. {name} {rating}\n")
             i += 1
-            
+
+
     def set_game_result(self, result):
         self.game_result = result
         # reset default values on the board

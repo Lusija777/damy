@@ -3,154 +3,144 @@ class Player:
         self.square_size = 72
         self.spacer = 10
         self.pieces = []
-
-        # sending player_name_1 to make sure not duplicate names playing together
-        self.initialize_player(i, player1_name)
-
-        identifier, is_new_player = self.check_if_old_player(players_file_lines)
-        if is_new_player:
-            self.rating = [1500, None]
-            self.identifier = identifier + 1
-
         self.offering_draw = False
         self.time = 6000
 
+        self.name = self.get_player_name(i, player1_name)
+        self.set_pieces(i)
+        self.set_buttons_and_timer(i)
+        self.set_directions(i)
+
+        result = self.check_if_old_player(players_file_lines)
+
+        if result is not None:
+            identifier, rating = result
+            self.rating = [int(rating), None]
+            self.identifier = identifier
+        else:
+            self.rating = [1500, None]
+            self.identifier = None
+
+    def get_player_name(self, player_index, player1_name):
+        suffix = "st" if player_index == 1 else "nd"
+        prompt = f"Enter the name of the {player_index}{suffix} player:"
+        name = input(prompt)
+
+        while not self.is_valid_name(name, player_index, player1_name):
+            print("The name cannot be empty, contain spaces, exceed 20 characters, or duplicate of other player name.")
+            name = input(prompt)
+
+        return name
+
+    def is_valid_name(self, name, player_index, player1_name):
+        if not name or " " in name or len(name) > 20:
+            return False
+        if player_index == 2 and name.lower() == player1_name.lower():
+            return False
+        return True
+
     def check_if_old_player(self, players_file_lines):
-        is_new_player = True
-        identifier = 0
         for identifier, line in enumerate(players_file_lines):
             if " " not in line:
                 continue
-            name_in_line, rating_in_line = line.strip().split(" ")
-            rating_in_line = int(rating_in_line)
-            if self.name.lower() == name_in_line.lower():
-                self.rating = [rating_in_line, None]
-                self.identifier = identifier
-                is_new_player = False
-                break
-        return identifier, is_new_player
+            name, rating = line.strip().split(" ")
+            if self.name.lower() == name.lower():
+                return identifier, rating
+        return None
 
-    def initialize_player(self, i, player1_name):
-        if i == 1:
-            for k in range(8):
-                for j in range(6, 8):
-                    if (k % 2) == 1 and (j % 2) == 0:
-                        self.pieces.append({"type": "p", "x": k, "y": j})
-                    elif (k % 2) == 0 and (j % 2) == 1:
-                        self.pieces.append({"type": "p", "x": k, "y": j})
+    def set_pieces(self, player_index):
+        rows = range(6, 8) if player_index == 1 else range(2)
+        for x in range(8):
+            for y in rows:
+                if (x + y) % 2 == 1:
+                    self.pieces.append({"type": "p", "x": x, "y": y})
 
-            self.name = input(f"Enter the name of the {i}st player:")
-            while self.name == "" or " " in self.name or len(self.name) > 20:
-                print("The name cannot be empty, cannot contain a space and cannot contain more than 20 characters.")
-                self.name = input(f"Enter the name of the {i}st player:")
-            self.buttons = {
-                "draw": [[5.5 * self.square_size - self.spacer,
-                          self.square_size * 8 + 3 * self.spacer + self.square_size / 2],
-                         [6 * self.square_size - self.spacer, self.square_size * 9 + 3 * self.spacer], "grey", .8],
-                "resign": [[6 * self.square_size, self.square_size * 8 + 3 * self.spacer + self.square_size / 2],
-                           [6.5 * self.square_size, self.square_size * 9 + 3 * self.spacer], "grey", .8],
-            }
-            self.timer = [6.5 * self.square_size + self.spacer,
-                          self.square_size * 8 + 3 * self.spacer + self.square_size / 2]
-            self.directions = [[-1, -1], [1, -1]]
+    def set_buttons_and_timer(self, player_index):
+        if player_index == 1:
+            y_offset = self.square_size * 8 + 3 * self.spacer
         else:
-            for k in range(8):
-                for j in range(2):
-                    if (k % 2) == 1 and (j % 2) == 0:
-                        self.pieces.append({"type": "p", "x": k, "y": j})
-                    elif (k % 2) == 0 and (j % 2) == 1:
-                        self.pieces.append({"type": "p", "x": k, "y": j})
+            y_offset = self.spacer - self.square_size / 2
 
-            self.name = input(f"Enter the name of the {i}nd player:")
-            while self.name == "" or " " in self.name or self.name == player1_name or len(self.name) > 20:
-                print(
-                    "The name cannot be empty, cannot contain a space, cannot play with yourself, and cannot contain more than 20 characters.")
-                self.name = input(f"Enter the name of the {i}nd player:")
-            self.buttons = {
-                "draw": [[5.5 * self.square_size - self.spacer, self.spacer],
-                         [6 * self.square_size - self.spacer, self.spacer + self.square_size / 2], "grey", .8],
-                "resign": [[6 * self.square_size, self.spacer],
-                           [6.5 * self.square_size, self.spacer + self.square_size / 2], "grey", .8],
-            }
-            self.timer = [6.5 * self.square_size + self.spacer, self.spacer]
-            self.directions = [[-1, 1], [1, 1]]
+        self.buttons = {
+            "draw": [[5.5 * self.square_size - self.spacer, y_offset + self.square_size / 2],
+                     [6 * self.square_size - self.spacer, y_offset + self.square_size], "grey", .8],
+            "resign": [[6 * self.square_size, y_offset + self.square_size / 2],
+                       [6.5 * self.square_size, y_offset + self.square_size], "grey", .8],
+        }
 
-    def find_moves(self, other_player_pieces):
+        self.timer = [6.5 * self.square_size + self.spacer, y_offset + self.square_size / 2]
+
+    def set_directions(self, player_index):
+        self.directions = [[-1, -1], [1, -1]] if player_index == 1 else [[-1, 1], [1, 1]]
+
+    def find_moves(self, opponent_pieces):
+        """Find all valid moves for each of this player's pieces."""
         for piece in self.pieces:
-            pole = []
-            if piece["type"] == "q":
-                directions = [[-1, 1], [1, 1], [-1, -1], [1, -1]]
-                for direction in directions:
-                    moves = Player.queen_move(self, self.pieces, other_player_pieces, [piece["x"], piece["y"]],
-                                              direction[0], direction[1])
-                    for move in moves:
-                        pole.append(move)
-            else:
-                for direction in self.directions:
-                    move = Player.pawn_move(self, self.pieces, other_player_pieces, [piece["x"], piece["y"]],
-                                            direction[0], direction[1])
-                    if [] != move:
-                        pole.append(move)
-            piece["moves"] = pole
+            piece["moves"] = []
 
-    def pawn_move(self, my_pieces, opponent_pieces, square, x, y, first_call=True):
-        if (square[0] + x) < 0 or (square[0] + x) > 7 or (square[1] + y) < 0 or (square[1] + y) > 7:
+            if piece["type"] == "q":
+                for dx, dy in [[-1, 1], [1, 1], [-1, -1], [1, -1]]:
+                    moves = self.queen_move(piece["x"], piece["y"], dx, dy, opponent_pieces)
+                    piece["moves"].extend(moves)
+            else:
+                for dx, dy in self.directions:
+                    move = self.pawn_move(piece["x"], piece["y"], dx, dy, opponent_pieces)
+                    if move:
+                        piece["moves"].append(move)
+
+    def pawn_move(self, x, y, dx, dy, opponent_pieces, first_call=True):
+        """Check single-step or capture move for a pawn."""
+        target_x, target_y = x + dx, y + dy
+        if not self.is_on_board(target_x, target_y):
             return []
 
-        is_my_pawn = False
-        is_opponent_pawn = False
-        for piece in my_pieces:
-            if piece["x"] == (square[0] + x) and piece["y"] == (square[1] + y):
-                is_my_pawn = True
-                break
-        for piece in opponent_pieces:
-            if piece["x"] == (square[0] + x) and piece["y"] == (square[1] + y):
-                is_opponent_pawn = True
-                break
-        if not is_my_pawn and not is_opponent_pawn:
+        if self.has_piece_at(target_x, target_y, self.pieces):
+            return []
+
+        if self.has_piece_at(target_x, target_y, opponent_pieces):
             if first_call:
-                return [[square[0] + x, square[1] + y], [None, None]]
+                # Try jumping over opponent piece
+                return self.pawn_move(target_x, target_y, dx, dy, opponent_pieces, False)
             else:
-                return [[square[0] + x, square[1] + y], square]
-        elif is_opponent_pawn and first_call:
-            return Player.pawn_move(self, my_pieces, opponent_pieces, [square[0] + x, square[1] + y], x, y, False)
+                return []
+        else:
+            landing = [target_x, target_y]
+            source = [None, None] if first_call else [x, y]
+            return [landing, source]
 
-        return []
-
-    def queen_move(self, my_pieces, opponent_pieces, square, x, y):
+    def queen_move(self, x, y, dx, dy, opponent_pieces):
+        """Get all valid diagonal moves for a queen."""
         moves = []
-        is_my_pawn = False
-        is_opponent_pawn = False
-        first_opponent_pawn = False
-        vynechaj = False
-        first_opponent_pawn_place = [None, None]
+        jumped = False
+        captured = None
+
         for i in range(1, 8):
-            if (square[0] + x * i) < 0 or (square[0] + x * i) > 7 or (square[1] + y * i) < 0 or (square[1] + y * i) > 7:
-                break
-            for piece in my_pieces:
-                if piece["x"] == (square[0] + x * i) and piece["y"] == (square[1] + y * i):
-                    is_my_pawn = True
-                    break
-            if is_my_pawn:
-                break
-            for piece in opponent_pieces:
-                if piece["x"] == (square[0] + x * i) and piece["y"] == (square[1] + y * i):
-                    if first_opponent_pawn == False:
-                        first_opponent_pawn = True
-                        first_opponent_pawn_place = [square[0] + x * i, square[1] + y * i]
-                        vynechaj = True
-                        break
-                    else:
-                        is_opponent_pawn = True
-            if vynechaj:
-                vynechaj = False
-                continue
-            if first_opponent_pawn and is_opponent_pawn:
+            tx, ty = x + dx * i, y + dy * i
+            if not self.is_on_board(tx, ty):
                 break
 
-            moves.append([[square[0] + x * i, square[1] + y * i], first_opponent_pawn_place])
+            if self.has_piece_at(tx, ty, self.pieces):
+                break
+
+            if self.has_piece_at(tx, ty, opponent_pieces):
+                if not jumped:
+                    jumped = True
+                    captured = [tx, ty]
+                    continue
+                else:
+                    break  # Cannot jump over two pieces
+
+            moves.append([[tx, ty], captured])
 
         return moves
+
+    def is_on_board(self, x, y):
+        """Return True if the coordinates are within the board."""
+        return 0 <= x <= 7 and 0 <= y <= 7
+
+    def has_piece_at(self, x, y, piece_list):
+        """Return True if any piece in the list occupies (x, y)."""
+        return any(piece["x"] == x and piece["y"] == y for piece in piece_list)
 
     def update_rating(self, gameResult, other_player_rating):
         # elo - rating calculation
