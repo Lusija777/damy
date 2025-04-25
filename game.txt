@@ -1,18 +1,1 @@
-1. fg3 ed6
-2. f4 e5
-3. fxd6 cxe5
-4. e3 f4
-5. exg5 f6
-6. gxe7 fxd6
-7. c3 e5
-8. d4 exc3
-9. ab2 cxa1=Q
-10. b2 Qxc3
-11. d2 Qxe1=Q
-12. f2 Qc3
-13. hg3 Qd4
-14. e3 Qxf2
-15. f4 Qd4
-16. e5 Qxf6
-
-0 - 1
+1/2 - 1/2
