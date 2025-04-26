@@ -1,7 +1,8 @@
 class Player:
     def __init__(self, i, players_file_lines, player1_name):
-        self.square_size = 72
-        self.spacer = 10
+        self.SQUARE_SIZE = 72
+        self.SPACER = 10
+        self.RATING_MULTIPLIER = 32
         self.pieces = []
         self.offering_draw = False
         self.time = 6000
@@ -57,18 +58,18 @@ class Player:
 
     def set_buttons_and_timer(self, player_index):
         if player_index == 1:
-            y_offset = self.square_size * 8 + 3 * self.spacer
+            y_offset = self.SQUARE_SIZE * 8 + 3 * self.SPACER
         else:
-            y_offset = self.spacer - self.square_size / 2
+            y_offset = self.SPACER - self.SQUARE_SIZE / 2
 
         self.buttons = {
-            "draw": [[5.5 * self.square_size - self.spacer, y_offset + self.square_size / 2],
-                     [6 * self.square_size - self.spacer, y_offset + self.square_size], "grey", .8],
-            "resign": [[6 * self.square_size, y_offset + self.square_size / 2],
-                       [6.5 * self.square_size, y_offset + self.square_size], "grey", .8],
+            "draw": [[5.5 * self.SQUARE_SIZE - self.SPACER, y_offset + self.SQUARE_SIZE / 2],
+                     [6 * self.SQUARE_SIZE - self.SPACER, y_offset + self.SQUARE_SIZE], "grey", .8],
+            "resign": [[6 * self.SQUARE_SIZE, y_offset + self.SQUARE_SIZE / 2],
+                       [6.5 * self.SQUARE_SIZE, y_offset + self.SQUARE_SIZE], "grey", .8],
         }
 
-        self.timer = [6.5 * self.square_size + self.spacer, y_offset + self.square_size / 2]
+        self.timer = [6.5 * self.SQUARE_SIZE + self.SPACER, y_offset + self.SQUARE_SIZE / 2]
 
     def set_directions(self, player_index):
         self.directions = [[-1, -1], [1, -1]] if player_index == 1 else [[-1, 1], [1, 1]]
@@ -147,8 +148,8 @@ class Player:
         expected_result_player = 1 / (1 + 10 ** ((other_player_rating - self.rating[0]) / 400))
 
         if gameResult == 1:
-            self.rating[1] = round(self.rating[0] + 32 * (1 - expected_result_player))
+            self.rating[1] = round(self.rating[0] + self.RATING_MULTIPLIER * (1 - expected_result_player))
         elif gameResult == 0:
-            self.rating[1] = round(self.rating[0] + 32 * ((1 / 2) - expected_result_player))
+            self.rating[1] = round(self.rating[0] + self.RATING_MULTIPLIER * ((1 / 2) - expected_result_player))
         else:
-            self.rating[1] = round(self.rating[0] + 32 * (0 - expected_result_player))
+            self.rating[1] = round(self.rating[0] + self.RATING_MULTIPLIER * (0 - expected_result_player))

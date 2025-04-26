@@ -18,8 +18,8 @@ class TestProgram(unittest.TestCase):
     def test_highlight_move_coordinates(self):
         # Vytvor dummy objekt bez tkinter
         program = Program.__new__(Program)
-        program.square_size = 72
-        program.spacer = 10
+        program.SQUARE_SIZE = 72
+        program.SPACER = 10
         program.canvas = MagicMock()
 
         # Zavolaj highlight_move a skontroluj, či create_oval bol zavolaný
@@ -107,15 +107,15 @@ class TestProgram(unittest.TestCase):
 
     def test_find_square_inside_bounds(self):
         program = Program(run=False, load_images=False)
-        program.square_size = 60
-        program.spacer = 10
+        program.SQUARE_SIZE = 60
+        program.SPACER = 10
         result = program.find_square(100, 200)
         self.assertIsInstance(result, list)
 
     def test_find_square_outside_bounds(self):
         program = Program(run=False, load_images=False)
-        program.square_size = 60
-        program.spacer = 10
+        program.SQUARE_SIZE = 60
+        program.SPACER = 10
         result = program.find_square(-20, 800)
         self.assertIsNone(result)
 
@@ -168,8 +168,9 @@ class TestProgram(unittest.TestCase):
 
     def test_stalemate_80_moves(self):
         program = Program(run=False, load_images=False)
+        program.current_move = {'piece': {'moves': [[[4, 5], [None, None]], [[6, 5], [None, None]]], 'type': 'p', 'x': 5, 'y': 6}, 'to': [[4, 5], [None, None]]}
         for i in range(80):
-            program.make_move([None, None, None, False, False, ""])
+            program.make_move(['p', [4, 5], [3, 4], False, False])
         Program.set_game_result = MagicMock()
         program.board = MagicMock()
 
