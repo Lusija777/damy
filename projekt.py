@@ -140,23 +140,27 @@ class Program:
         for move in piece["moves"]:
             self._highlight_move(move[0][0], move[0][1])
 
-    def _highlight_move(self, x, y):
-        """Highlights a potential move square with an oval shape."""
-        x1 = self.SPACER + self.SQUARE_SIZE * x + 1 / 3 * self.SQUARE_SIZE
-        y1 = 2 * self.SPACER + self.SQUARE_SIZE / 2 + self.SQUARE_SIZE * y + 1 / 3 * self.SQUARE_SIZE
-        x2 = x1 + self.SQUARE_SIZE - 2 / 3 * self.SQUARE_SIZE
-        y2 = y1 + self.SQUARE_SIZE - 2 / 3 * self.SQUARE_SIZE
-        self.canvas.create_oval(x1, y1, x2, y2, fill="YellowGreen", outline="YellowGreen")
-
-    def _highlight_square(self, position, fill):
-        """Highlights a board square at a given logical position (x, y)."""
-        x, y = position
+    def _get_square_coords(self, x, y):
         x1 = self.SPACER + self.SQUARE_SIZE * x
         y1 = 2 * self.SPACER + self.SQUARE_SIZE / 2 + self.SQUARE_SIZE * y
         x2 = x1 + self.SQUARE_SIZE
         y2 = y1 + self.SQUARE_SIZE
+        return x1, y1, x2, y2
 
+    def _highlight_square(self, position, fill):
+        x, y = position
+        x1, y1, x2, y2 = self._get_square_coords(x, y)
         self.canvas.create_rectangle(x1, y1, x2, y2, fill=fill, outline="")
+
+    def _highlight_move(self, x, y):
+        x1, y1, x2, y2 = self._get_square_coords(x, y)
+        padding = self.SQUARE_SIZE / 3
+
+        self.canvas.create_oval(
+            x1 + padding, y1 + padding,
+            x2 - padding, y2 - padding,
+            fill="YellowGreen", outline="YellowGreen"
+        )
 
     def paint_squares(self):
         color1, color2 = "khaki", "saddlebrown"
@@ -301,7 +305,7 @@ class Program:
             )
 
         # Draw column letters (a to h)
-        col_letters = [chr(i) for i in range(ord("h"), ord("a") - 1, -1)]   #['a', ..., 'h']
+        col_letters = [chr(i) for i in range(ord("h"), ord("a") - 1, -1)]  # ['a', ..., 'h']
         for i in range(8):
             self.canvas.create_text(
                 self.SPACER + self.SQUARE_SIZE * (7 - i) + 5,

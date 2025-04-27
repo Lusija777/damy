@@ -154,7 +154,7 @@ class TestProgram(unittest.TestCase):
         Program.board = MagicMock()
 
         program.check_game_end()
-        Program.set_game_result.assert_called_with(program, 1)
+        Program.set_game_result.assert_called_with(1)
 
     def test_game_end_no_moves(self):
         program = Program(run=False, load_images=False)
@@ -164,7 +164,7 @@ class TestProgram(unittest.TestCase):
         Program.board = MagicMock()
 
         program.check_game_end()
-        Program.set_game_result.assert_called_with(program, 1)
+        Program.set_game_result.assert_called_with(1)
 
     def test_stalemate_80_moves(self):
         program = Program(run=False, load_images=False)
@@ -175,7 +175,7 @@ class TestProgram(unittest.TestCase):
         program.board = MagicMock()
 
         program.check_80_insignificant_moves()
-        Program.set_game_result.assert_called_with(program, 0)
+        Program.set_game_result.assert_called_with(0)
 
     def test_make_move_adds_to_move_list(self):
         program = Program(run=False, load_images=False)
